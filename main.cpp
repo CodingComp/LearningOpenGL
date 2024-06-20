@@ -4,6 +4,16 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "VBO.h"
+#include "VAO.h"
+
+GLfloat positions[] =
+{
+	-0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,
+	0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,
+	0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f,
+};
+
 GLFWwindow* window;
 
 int width = 800;
@@ -11,14 +21,8 @@ int height = 800;
 
 GLuint shaderProgram;
 
-GLuint VBO, VAO;
-
-float positions[] =
-{
-	-0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,
-	0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,
-	0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f,
-};
+VBO* vbo;
+VAO* vao;
 
 const char* readShaderCode(const char* fileName)
 {
@@ -33,7 +37,7 @@ const char* readShaderCode(const char* fileName)
 	while (getline(inputFile, line))
 	{ 
 		text += line + '\n';
-	} 
+	}
 	
 	inputFile.close();
 	
@@ -53,7 +57,7 @@ void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(shaderProgram);
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao->ID);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 	
 	glfwSwapBuffers(window);
@@ -98,8 +102,6 @@ bool initialize()
 	glViewport(0, 0, width, height);
 	
 	glfwSetKeyCallback(window, keyCallback);
-	
-	glClearColor(1.0f,1.0f,1.0f,1.0f);
 
 	/*
 	 *	Shaders
@@ -127,20 +129,19 @@ bool initialize()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 	
-	// Generate VAO & VBO
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+	// Generates Vertex Array Object and binds it
+	vao = new VAO();
+	vao->Bind();
 	
-	glBindVertexArray(VAO);
+	// Generates Vertex Buffer Object and links it to vertices
+	vbo = new VBO(positions, sizeof(positions));
 	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0,3,GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	// Links VBO attributes
+	vao->LinkAttrib(*vbo, 0, 3, GL_FALSE, 3 * sizeof(float), (void*)0);
+	
+	// Unbind all to prevent accidentally modifying them
+	vao->Unbind();
+	vbo->Unbind();
 	
 	glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
