@@ -3,9 +3,9 @@
 // 3f: Position | 3f: Color
 GLfloat positions[] =
 {
-	-0.5f, -0.5f * float(sqrt(3))     / 3, 0.0f, 1.0f, 0.0f, 0.0f,
-	 0.5f, -0.5f * float(sqrt(3))     / 3, 0.0f, 0.0f, 1.0f, 0.0f,
-	 0.0f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f, 0.0f, 0.0f, 1.0f,
+	-0.5f, -0.5f * float(sqrt(3))     / 3, 0.0f, 0.0f, 1.0f, 0.0f,
+	 0.5f, -0.5f * float(sqrt(3))     / 3, 0.0f, 0.0f, 0.0f, 1.0f,
+	 0.0f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f, 1.0f, 0.0f, 0.0f,
 };
 
 
@@ -50,13 +50,15 @@ bool ShaderProgram::initialize()
 	// Initialize GLFW
 	glfwInit();
 	
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 	
 	// Create Window
 	window = glfwCreateWindow(width, height, "OpenGL Learning", NULL, NULL);
-	if (!window) 
+	if (!window)
 	{
 		std::cout << "Failed To Create Window\n";
 		glfwTerminate();
@@ -71,6 +73,8 @@ bool ShaderProgram::initialize()
 	
 	glfwSetKeyCallback(window, keyCallback);
 
+	CY_GL_REGISTER_DEBUG_CALLBACK
+	
 	/*
 	 *	Shaders
 	 */
@@ -134,4 +138,3 @@ void ShaderProgram::closeProgram()
 {
 	glfwDestroyWindow(window);
 }
-

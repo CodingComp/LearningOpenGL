@@ -5,6 +5,7 @@
 #include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <cy/cyGL.h>
 
 #include "VBO.h"
 #include "VAO.h"
@@ -18,7 +19,7 @@ class ShaderProgram
 
     VBO* vbo;
     VAO* vao;
-
+    
     const char* readShaderCode(const char* fileName);
 
     // Callback function for when a key is pressed.
