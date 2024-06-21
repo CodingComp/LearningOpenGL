@@ -4,160 +4,31 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "VBO.h"
-#include "VAO.h"
+#include "ShaderProgram.h"
 
-GLfloat positions[] =
-{
-	-0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,
-	0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,
-	0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f,
-};
-
-GLFWwindow* window;
-
-int width = 800;
-int height = 800;
-
-GLuint shaderProgram;
-
-VBO* vbo;
-VAO* vao;
-
-const char* readShaderCode(const char* fileName)
-{
-	std::ifstream inputFile(fileName);
-	static std::string text;
-	std::string line;
-
-	// Checks to see if the text is empty & clears if not empty
-	if (!text.empty())
-		text.clear();
-	
-	while (getline(inputFile, line))
-	{ 
-		text += line + '\n';
-	}
-	
-	inputFile.close();
-	
-	return text.c_str();
-}
-
-
-// Callback function for when a key is pressed.
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
-}
-
-
-void draw()
-{
-	glClear(GL_COLOR_BUFFER_BIT);
-	glUseProgram(shaderProgram);
-	glBindVertexArray(vao->ID);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	
-	glfwSwapBuffers(window);
-}
-
+ShaderProgram* shaderProgram;
 
 // Main loop of the program, used for anything that needs to be called each frame.
 void mainLoop()
 {
-	while (!glfwWindowShouldClose(window)) 
+	while (!glfwWindowShouldClose(shaderProgram->window)) 
 	{
-		draw();
+		shaderProgram->draw();
 		
 		glfwPollEvents();
 	}
 }
 
 
-// Initializes GLFW & OpenGL. If initialization fails this function returns false.
-bool initialize()
-{
-	// Initialize GLFW
-	glfwInit();
-	
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	
-	// Create Window
-	window = glfwCreateWindow(width, height, "OpenGL Learning", NULL, NULL);
-	if (!window) 
-	{
-		std::cout << "Failed To Create Window\n";
-		glfwTerminate();
-		return false;
-	}
-	
-	glfwMakeContextCurrent(window);
-	gladLoadGL();
-
-	glfwGetFramebufferSize(window, &width, &height);
-	glViewport(0, 0, width, height);
-	
-	glfwSetKeyCallback(window, keyCallback);
-
-	/*
-	 *	Shaders
-	 */
-	shaderProgram = glCreateProgram();
-
-	// Vertex Shader
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	const char* vertexShaderCode = readShaderCode("shader.vert");
-	glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
-	glCompileShader(vertexShader);
-
-	// Fragment Shader
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	const char* fragShaderCode = readShaderCode("shader.frag");
-	glShaderSource(fragmentShader, 1, &fragShaderCode, NULL);
-	glCompileShader(fragmentShader);
-
-	// Program
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-	
-	// Generates Vertex Array Object and binds it
-	vao = new VAO();
-	vao->Bind();
-	
-	// Generates Vertex Buffer Object and links it to vertices
-	vbo = new VBO(positions, sizeof(positions));
-	
-	// Links VBO attributes
-	vao->LinkAttrib(*vbo, 0, 3, GL_FALSE, 3 * sizeof(float), (void*)0);
-	
-	// Unbind all to prevent accidentally modifying them
-	vao->Unbind();
-	vbo->Unbind();
-	
-	glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glfwSwapBuffers(window);
-	
-	return true;
-}
-
-
 int main() 
 {
-	if (!initialize()) return -1;
+	shaderProgram = new ShaderProgram();
+	
+	if (!shaderProgram->initialize()) return -1;
 	
 	mainLoop();
 	
-	glfwDestroyWindow(window);
+	shaderProgram->closeProgram();
 	glfwTerminate();
 
 	return 0;
