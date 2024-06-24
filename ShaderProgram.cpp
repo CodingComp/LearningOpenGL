@@ -1,17 +1,29 @@
 #include "ShaderProgram.h"
 
-// 3f: Position | 3f: Color
-GLfloat positions[] =
-{
-	-0.5f, -0.5f * float(sqrt(3))     / 3, 0.0f, 0.0f, 1.0f, 0.0f,
-	 0.5f, -0.5f * float(sqrt(3))     / 3, 0.0f, 0.0f, 0.0f, 1.0f,
-	 0.0f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f, 1.0f, 0.0f, 0.0f,
-};
 
-
-ShaderProgram::ShaderProgram()
+ShaderProgram::ShaderProgram(char const* filePath)
 {
+	mesh = new cy::TriMesh;
+	validMesh = mesh->LoadFromFileObj(filePath);
+
+	// Each vertex point's X Y Z (*3) float stored.
+	int bufferArraySize = mesh->NV() * 3;
+	buffer = new GLfloat[bufferArraySize];
 	
+	bufferByteSize = bufferArraySize * sizeof(float);
+
+	// Loops over each vertex and stores X Y Z floats into buffer.
+	int bufferIndex = 0;
+	for (int i = 0; i < mesh->NV(); i++)
+	{
+		cy::Vec3f pos = mesh->V(i);
+		
+		buffer[bufferIndex]   = pos.x;
+		buffer[bufferIndex+1] = pos.y;
+		buffer[bufferIndex+2] = pos.z;
+
+		bufferIndex += 3;
+	}
 }
 
 
@@ -53,7 +65,6 @@ bool ShaderProgram::initialize()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 	
 	// Create Window
@@ -79,43 +90,24 @@ bool ShaderProgram::initialize()
 	 *	Shaders
 	 */
 	
-	// Vertex Shader
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	const char* vertexShaderCode = readShaderCode("shader.vert");
-	glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
-	glCompileShader(vertexShader);
-
-	// Fragment Shader
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	const char* fragShaderCode = readShaderCode("shader.frag");
-	glShaderSource(fragmentShader, 1, &fragShaderCode, NULL);
-	glCompileShader(fragmentShader);
-
-	// Program
-	program = glCreateProgram();
-	glAttachShader(program, vertexShader);
-	glAttachShader(program, fragmentShader);
-	glLinkProgram(program);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	shaderProgram.BuildFiles("shader.vert", "shader.frag");
+	shaderProgram.Link();
 	
 	// Generates Vertex Array Object and binds it
 	vao = new VAO();
 	vao->Bind();
 	
 	// Generates Vertex Buffer Object and links it to vertices
-	vbo = new VBO(positions, sizeof(positions));
+	vbo = new VBO(buffer, bufferByteSize);
 
 	// Links VBO attributes
-	vao->LinkAttribute(*vbo, 0, 3, GL_FLOAT, 6 * sizeof(float), 0);
-	vao->LinkAttribute(*vbo, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	vao->LinkAttribute(*vbo, 0, 3, GL_FLOAT, 3 * sizeof(float), 0);
 	
 	// Unbind all to prevent accidentally modifying them
 	vao->Unbind();
 	vbo->Unbind();
 	
-	glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glfwSwapBuffers(window);
 	
@@ -126,9 +118,9 @@ bool ShaderProgram::initialize()
 void ShaderProgram::draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glUseProgram(program);
+	glUseProgram(shaderProgram.GetID());
 	glBindVertexArray(vao->ID);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawArrays(GL_POINTS, 0, mesh->NV());
 	
 	glfwSwapBuffers(window);
 }

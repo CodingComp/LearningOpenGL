@@ -1,6 +1,8 @@
 #include "VBO.h"
+#include <iostream>
 
-
+// Vertices: ptr to array of data
+// Size: size IN BYTES of data
 VBO::VBO(GLfloat* vertices, GLsizeiptr size)
 {
     glGenBuffers(1, &ID);

@@ -20,11 +20,28 @@ void mainLoop()
 }
 
 
-int main() 
+int main(int argc, char* argv[]) 
 {
-	shaderProgram = new ShaderProgram();
+	// Checks .obj file given
+	if (argc <= 1)
+	{
+		std::cout << "You Must Input A File Path For A (.OBJ) File.\n";
+		return 0;
+	}
+
+	// Create Shader Program
+	shaderProgram = new ShaderProgram(argv[1]);
+	if (!shaderProgram->validMesh)
+	{
+		std::cout << "Mesh File Or Path To Mesh File Wasn't Valid.\n";
+		return 0;
+	}
 	
-	if (!shaderProgram->initialize()) return -1;
+	if (!shaderProgram->initialize())
+	{
+		std::cout << "Failed To Initialize Shader Program.\n";
+		return 0;
+	}
 	
 	mainLoop();
 	
