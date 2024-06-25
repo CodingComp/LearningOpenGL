@@ -1,32 +1,30 @@
 #include "ShaderProgram.h"
 
-
+// Loads a .obj mesh from a file path
 ShaderProgram::ShaderProgram(char const* filePath)
 {
 	mesh = new cy::TriMesh;
 	validMesh = mesh->LoadFromFileObj(filePath);
 
-	// Each vertex point's X Y Z (*3) float stored.
-	int bufferArraySize = mesh->NV() * 3;
-	buffer = new GLfloat[bufferArraySize];
-	
-	bufferByteSize = bufferArraySize * sizeof(float);
+	projectionMatrix = cy::Matrix4f::Identity();
+	projectionMatrix.SetDiagonal(0.05f, 0.05f, 0.05f);
+	/*
+	projectionMatrix = cy::Matrix4f::Perspective(
+		float(40 * (atan(1)*4) / 180.0), float(width)/float(height), 0.1f, 1000.0f);
+		*/
 
-	// Loops over each vertex and stores X Y Z floats into buffer.
-	int bufferIndex = 0;
-	for (int i = 0; i < mesh->NV(); i++)
+	cells = new float[16];
+	projectionMatrix.Get(cells);
+	/* // Prints matrix cells array
+	 for (int row = 0; row < 4; row++)
 	{
-		cy::Vec3f pos = mesh->V(i);
-		
-		buffer[bufferIndex]   = pos.x;
-		buffer[bufferIndex+1] = pos.y;
-		buffer[bufferIndex+2] = pos.z;
-
-		bufferIndex += 3;
+		std::cout << cells[row + (row * 3)] << " " << cells[row + (row * 3) + 1]  << " " <<cells[row + (row * 3) + 2] << " " << cells[row + (row * 3) + 3] << "\n";
 	}
+	*/
 }
 
 
+// Reads shader code from the shader.vert & shader.frag
 const char* ShaderProgram::readShaderCode(const char* fileName)
 {
     std::ifstream inputFile(fileName);
@@ -53,6 +51,9 @@ void ShaderProgram::keyCallback(GLFWwindow* windowRef, int key, int scancode, in
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(windowRef, GLFW_TRUE);
+
+	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+		std::cout<<"Change Perspective.\n";
 }
 
 
@@ -98,14 +99,15 @@ bool ShaderProgram::initialize()
 	vao->Bind();
 	
 	// Generates Vertex Buffer Object and links it to vertices
-	vbo = new VBO(buffer, bufferByteSize);
-
+	vbo = new VBO(&mesh->V(0), sizeof(cy::Vec3f) * mesh->NV());
+ 	
 	// Links VBO attributes
-	vao->LinkAttribute(*vbo, 0, 3, GL_FLOAT, 3 * sizeof(float), 0);
+	vao->LinkAttribute(*vbo, 0, 3, GL_FLOAT, sizeof(cy::Vec3f), 0);
 	
 	// Unbind all to prevent accidentally modifying them
 	vao->Unbind();
 	vbo->Unbind();
+
 	
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -118,8 +120,13 @@ bool ShaderProgram::initialize()
 void ShaderProgram::draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glUseProgram(shaderProgram.GetID());
-	glBindVertexArray(vao->ID);
+	
+	shaderProgram.Bind();
+	
+	shaderProgram.SetUniformMatrix4("mvp", cells);
+
+	vao->Bind();
+	
 	glDrawArrays(GL_POINTS, 0, mesh->NV());
 	
 	glfwSwapBuffers(window);
@@ -129,4 +136,16 @@ void ShaderProgram::draw()
 void ShaderProgram::closeProgram()
 {
 	glfwDestroyWindow(window);
+}
+
+
+void ShaderProgram::recompileShaders()
+{
+	
+}
+
+
+void ShaderProgram::changePerspective()
+{
+	
 }

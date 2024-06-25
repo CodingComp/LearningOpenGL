@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cy/cyVector.h>
 #include <glad/glad.h>
 
 class VBO
@@ -9,7 +10,8 @@ public:
     GLuint ID;
     // Constructor that generates a VBO ID
     VBO(GLfloat* vertices, GLsizeiptr size);
-
+    VBO(cy::Vec3f* vertices, GLsizeiptr size);
+    
     void Bind();
 
     void Unbind();
