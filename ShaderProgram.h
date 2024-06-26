@@ -9,6 +9,10 @@
 #include <cy/cyTriMesh.h>
 #include <cy/cyMatrix.h>
 #include <cmath>
+#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
+#include <glm/ext/matrix_clip_space.hpp> // glm::perspective
+#include <glm/ext/scalar_constants.hpp> // glm::pi
 
 #include "VBO.h"
 #include "VAO.h"
@@ -26,18 +30,32 @@ class ShaderProgram
 
     cy::GLSLProgram shaderProgram;
     cy::TriMesh* mesh;
-    
-    // Callback function for when a key is pressed.
-    static void keyCallback(GLFWwindow* windowRef, int key, int scancode, int action, int mods);
 
-    float* cells;
-    cy::Matrix4f projectionMatrix;
+    // Vertex Shader Matrix
+    glm::mat4 m;
+
+    // Matrix Models
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 proj = glm::mat4(1.0f);
+    
+    // Projection Matrix Vars
+    float mTop =  20.0f;
+    float mBot = -20.0f;
+
+    float mRight = 20.0f;
+    float mLeft = -20.0f;
+    
+    float mFar = 1000.0f;
+    float mNear = 0.1f;
+
+    bool orthoPerspective;
     
 public:
     GLFWwindow* window;
 
     bool validMesh = false;
-
+    
     // Loads a .obj mesh from a file path
     ShaderProgram(char const* filePath);
     
@@ -47,7 +65,7 @@ public:
 
     void closeProgram();
 
-    void recompileShaders();
+    void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-    void changePerspective();
+    static void recompileShaders();
 };

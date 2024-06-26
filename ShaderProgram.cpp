@@ -1,26 +1,40 @@
 #include "ShaderProgram.h"
 
+
+void ShaderProgram::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+		orthoPerspective = !orthoPerspective;
+
+	if (key == GLFW_KEY_F6 && action == GLFW_PRESS)
+		recompileShaders();
+}
+
 // Loads a .obj mesh from a file path
 ShaderProgram::ShaderProgram(char const* filePath)
 {
 	mesh = new cy::TriMesh;
 	validMesh = mesh->LoadFromFileObj(filePath);
+	
+	// Rotates teapot
+	model = rotate(model, glm::radians(-60.0f), glm::vec3(1.0f, 0.0f, 0.0f))*
+			rotate(model, glm::radians(-20.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
+			rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	projectionMatrix = cy::Matrix4f::Identity();
-	projectionMatrix.SetDiagonal(0.05f, 0.05f, 0.05f);
-	/*
-	projectionMatrix = cy::Matrix4f::Perspective(
-		float(40 * (atan(1)*4) / 180.0), float(width)/float(height), 0.1f, 1000.0f);
-		*/
+	// Translate teapot
+	view = translate(view, glm::vec3(-2.0f, -5.0f, -30.0f));
 
-	cells = new float[16];
-	projectionMatrix.Get(cells);
-	/* // Prints matrix cells array
-	 for (int row = 0; row < 4; row++)
-	{
-		std::cout << cells[row + (row * 3)] << " " << cells[row + (row * 3) + 1]  << " " <<cells[row + (row * 3) + 2] << " " << cells[row + (row * 3) + 3] << "\n";
-	}
-	*/
+	// Projection 
+	proj = glm::perspective(glm::radians(80.0f), (float)(width / height), mNear, mFar);
+	
+	m = proj * view * model;
+	orthoPerspective = false;
+
+	// Prints matrix cells array
+	std::cout << m[0][0] << " " << m[1][0] << " " << m[2][0]  << " " << m[3][0] << " \n";
+	std::cout << m[0][1] << " " << m[1][1] << " " << m[2][1]  << " " << m[3][1] << " \n";
+	std::cout << m[0][2] << " " << m[1][2] << " " << m[2][2]  << " " << m[3][2] << " \n";
+	std::cout << m[0][3] << " " << m[1][3] << " " << m[2][3]  << " " << m[3][3] << " \n";
 }
 
 
@@ -35,7 +49,7 @@ const char* ShaderProgram::readShaderCode(const char* fileName)
     if (!text.empty())
         text.clear();
 	
-    while (getline(inputFile, line))
+    while (getline(inputFile, line))	
     { 
         text += line + '\n';
     }
@@ -43,17 +57,6 @@ const char* ShaderProgram::readShaderCode(const char* fileName)
     inputFile.close();
 	
     return text.c_str();
-}
-
-
-// Callback function for when a key is pressed.
-void ShaderProgram::keyCallback(GLFWwindow* windowRef, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(windowRef, GLFW_TRUE);
-
-	if (key == GLFW_KEY_P && action == GLFW_PRESS)
-		std::cout<<"Change Perspective.\n";
 }
 
 
@@ -76,6 +79,21 @@ bool ShaderProgram::initialize()
 		glfwTerminate();
 		return false;
 	}
+
+	// Stores ptr to this class
+	glfwSetWindowUserPointer(window, this);
+	//glfwSetKeyCallback(window, key_callback);
+
+	glfwSetKeyCallback(window, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
+		// Retrieve class ptr
+		ShaderProgram* program = static_cast<ShaderProgram*>(glfwGetWindowUserPointer(win));
+	            
+		// Call member function
+		if (program) {
+			program->keyCallback(win, key, scancode, action, mods);
+		}
+	});
+	
 	
 	glfwMakeContextCurrent(window);
 	gladLoadGL();
@@ -83,8 +101,6 @@ bool ShaderProgram::initialize()
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 	
-	glfwSetKeyCallback(window, keyCallback);
-
 	CY_GL_REGISTER_DEBUG_CALLBACK
 	
 	/*
@@ -107,11 +123,12 @@ bool ShaderProgram::initialize()
 	// Unbind all to prevent accidentally modifying them
 	vao->Unbind();
 	vbo->Unbind();
-
 	
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glfwSwapBuffers(window);
+
+	glEnable(GL_DEPTH_TEST);
 	
 	return true;
 }
@@ -119,14 +136,21 @@ bool ShaderProgram::initialize()
 
 void ShaderProgram::draw()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	shaderProgram.Bind();
+
+	// Matracies 
+	proj = orthoPerspective ?
+		glm::ortho(mLeft, mRight, mBot, mTop, mNear, mFar) :
+		glm::perspective(glm::radians(80.0f), (float)(width / height), mNear, mFar);
+
+	m = proj * view * model;
 	
-	shaderProgram.SetUniformMatrix4("mvp", cells);
+	shaderProgram.SetUniformMatrix4("mvp", (float*)&m);
 
 	vao->Bind();
-	
+
 	glDrawArrays(GL_POINTS, 0, mesh->NV());
 	
 	glfwSwapBuffers(window);
@@ -141,11 +165,5 @@ void ShaderProgram::closeProgram()
 
 void ShaderProgram::recompileShaders()
 {
-	
-}
-
-
-void ShaderProgram::changePerspective()
-{
-	
+	std::cout << "RECOMPILE SHADERS\n";
 }
