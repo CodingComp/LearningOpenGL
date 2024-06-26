@@ -13,17 +13,21 @@
 #include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
 #include <glm/ext/scalar_constants.hpp> // glm::pi
+#include<glm/gtc/type_ptr.hpp>
 
 #include "VBO.h"
 #include "VAO.h"
+#include "Camera.h"
 
 class ShaderProgram
 {
-    int width = 800;
-    int height = 800;
+    int width = 1200;
+    int height = 1200;
 
     VBO* vbo;
     VAO* vao;
+
+    Camera* camera;
 
     // Reads shader code from the shader.vert & shader.frag
     const char* readShaderCode(const char* fileName);
@@ -37,7 +41,10 @@ class ShaderProgram
     // Matrix Models
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 proj = glm::mat4(1.0f);
+
+    // Model Rotation Variables
+    float modelRotation = 0.0f;
+    double prevTime;
     
     // Projection Matrix Vars
     float mTop =  20.0f;
@@ -48,8 +55,6 @@ class ShaderProgram
     
     float mFar = 1000.0f;
     float mNear = 0.1f;
-
-    bool orthoPerspective;
     
 public:
     GLFWwindow* window;
@@ -67,5 +72,5 @@ public:
 
     void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-    static void recompileShaders();
+    void compileShaders();
 };

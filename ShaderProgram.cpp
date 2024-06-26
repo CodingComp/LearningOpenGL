@@ -4,37 +4,37 @@
 void ShaderProgram::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
-		orthoPerspective = !orthoPerspective;
+		camera->changePerspective();
 
 	if (key == GLFW_KEY_F6 && action == GLFW_PRESS)
-		recompileShaders();
+		compileShaders();
 }
+
 
 // Loads a .obj mesh from a file path
 ShaderProgram::ShaderProgram(char const* filePath)
 {
 	mesh = new cy::TriMesh;
 	validMesh = mesh->LoadFromFileObj(filePath);
+	if (!validMesh) return;
 	
 	// Rotates teapot
-	model = rotate(model, glm::radians(-60.0f), glm::vec3(1.0f, 0.0f, 0.0f))*
-			rotate(model, glm::radians(-20.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
+	model = rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f))*
+			rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
 			rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	// Translate teapot
-	view = translate(view, glm::vec3(-2.0f, -5.0f, -30.0f));
-
-	// Projection 
-	proj = glm::perspective(glm::radians(80.0f), (float)(width / height), mNear, mFar);
+	view = translate(view, glm::vec3(0.0f, -10.0f, -30.0f));
 	
-	m = proj * view * model;
-	orthoPerspective = false;
+	m = view * model;
 
 	// Prints matrix cells array
+	/*
 	std::cout << m[0][0] << " " << m[1][0] << " " << m[2][0]  << " " << m[3][0] << " \n";
 	std::cout << m[0][1] << " " << m[1][1] << " " << m[2][1]  << " " << m[3][1] << " \n";
 	std::cout << m[0][2] << " " << m[1][2] << " " << m[2][2]  << " " << m[3][2] << " \n";
 	std::cout << m[0][3] << " " << m[1][3] << " " << m[2][3]  << " " << m[3][3] << " \n";
+	*/
 }
 
 
@@ -82,18 +82,17 @@ bool ShaderProgram::initialize()
 
 	// Stores ptr to this class
 	glfwSetWindowUserPointer(window, this);
-	//glfwSetKeyCallback(window, key_callback);
-
 	glfwSetKeyCallback(window, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
 		// Retrieve class ptr
 		ShaderProgram* program = static_cast<ShaderProgram*>(glfwGetWindowUserPointer(win));
 	            
 		// Call member function
-		if (program) {
+		if (program) 
 			program->keyCallback(win, key, scancode, action, mods);
-		}
 	});
-	
+
+	// Moves cursor to center before draw to avoid camera jult
+	glfwSetCursorPos(window, width/2, height/2); 
 	
 	glfwMakeContextCurrent(window);
 	gladLoadGL();
@@ -107,8 +106,7 @@ bool ShaderProgram::initialize()
 	 *	Shaders
 	 */
 	
-	shaderProgram.BuildFiles("shader.vert", "shader.frag");
-	shaderProgram.Link();
+	compileShaders();
 	
 	// Generates Vertex Array Object and binds it
 	vao = new VAO();
@@ -129,6 +127,10 @@ bool ShaderProgram::initialize()
 	glfwSwapBuffers(window);
 
 	glEnable(GL_DEPTH_TEST);
+
+	camera = new Camera(width, height, shaderProgram.GetID(), mLeft, mRight, mBot, mTop, mNear, mFar, 80.0f);
+
+	prevTime = glfwGetTime();
 	
 	return true;
 }
@@ -140,19 +142,33 @@ void ShaderProgram::draw()
 	
 	shaderProgram.Bind();
 
-	// Matracies 
-	proj = orthoPerspective ?
-		glm::ortho(mLeft, mRight, mBot, mTop, mNear, mFar) :
-		glm::perspective(glm::radians(80.0f), (float)(width / height), mNear, mFar);
-
-	m = proj * view * model;
+	double time = glfwGetTime();
+	if (time - prevTime >= 1 / 60)
+	{
+		modelRotation += 0.5f;
+		prevTime = time;
+	}
 	
-	shaderProgram.SetUniformMatrix4("mvp", (float*)&m);
+	// Rotates teapot
+	model = glm::mat4(1.0f);
+	view = glm::mat4(1.0f);
 
+	// Rotates the model on the Z axis
+	model = rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
+			rotate(model, glm::radians(modelRotation), glm::vec3(0.0f, 0.0f, 1.0f));
+	view = translate(view, glm::vec3(0.0f, -10.0f, -30.0f));
+
+	m = view * model;
+	
+	camera->inputs(window);
+	camera->matrix();
+
+	shaderProgram.SetUniformMatrix4("objectMatrix", value_ptr(m));
+	
 	vao->Bind();
 
 	glDrawArrays(GL_POINTS, 0, mesh->NV());
-	
+
 	glfwSwapBuffers(window);
 }
 
@@ -163,7 +179,8 @@ void ShaderProgram::closeProgram()
 }
 
 
-void ShaderProgram::recompileShaders()
+void ShaderProgram::compileShaders()
 {
-	std::cout << "RECOMPILE SHADERS\n";
+	shaderProgram.BuildFiles("shader.vert", "shader.frag");
+	shaderProgram.Link();
 }

@@ -8,6 +8,7 @@ class VBO
 public:
     // ID reference for the Vertex Buffer Object
     GLuint ID;
+    
     // Constructor that generates a VBO ID
     VBO(GLfloat* vertices, GLsizeiptr size);
     VBO(cy::Vec3f* vertices, GLsizeiptr size);
