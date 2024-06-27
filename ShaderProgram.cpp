@@ -1,17 +1,5 @@
 #include "ShaderProgram.h"
 
-
-void ShaderProgram::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_P && action == GLFW_PRESS)
-		camera->changePerspective();
-
-	if (key == GLFW_KEY_F6 && action == GLFW_PRESS)
-		compileShaders();
-}
-
-
-// Loads a .obj mesh from a file path
 ShaderProgram::ShaderProgram(char const* filePath)
 {
 	mesh = new cy::TriMesh;
@@ -27,18 +15,8 @@ ShaderProgram::ShaderProgram(char const* filePath)
 	view = translate(view, glm::vec3(0.0f, -10.0f, -30.0f));
 	
 	m = view * model;
-
-	// Prints matrix cells array
-	/*
-	std::cout << m[0][0] << " " << m[1][0] << " " << m[2][0]  << " " << m[3][0] << " \n";
-	std::cout << m[0][1] << " " << m[1][1] << " " << m[2][1]  << " " << m[3][1] << " \n";
-	std::cout << m[0][2] << " " << m[1][2] << " " << m[2][2]  << " " << m[3][2] << " \n";
-	std::cout << m[0][3] << " " << m[1][3] << " " << m[2][3]  << " " << m[3][3] << " \n";
-	*/
 }
 
-
-// Reads shader code from the shader.vert & shader.frag
 const char* ShaderProgram::readShaderCode(const char* fileName)
 {
     std::ifstream inputFile(fileName);
@@ -59,11 +37,8 @@ const char* ShaderProgram::readShaderCode(const char* fileName)
     return text.c_str();
 }
 
-
-// Initializes GLFW & OpenGL. If initialization fails this function returns false.
 bool ShaderProgram::initialize()
 {
-	// Initialize GLFW
 	glfwInit();
 	
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -80,7 +55,7 @@ bool ShaderProgram::initialize()
 		return false;
 	}
 
-	// Stores ptr to this class
+	// Sets key callack for GLFW. Sets pointer to this shader class to be used in the callback function
 	glfwSetWindowUserPointer(window, this);
 	glfwSetKeyCallback(window, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
 		// Retrieve class ptr
@@ -108,33 +83,21 @@ bool ShaderProgram::initialize()
 	
 	compileShaders();
 	
-	// Generates Vertex Array Object and binds it
 	vao = new VAO();
 	vao->Bind();
 	
-	// Generates Vertex Buffer Object and links it to vertices
 	vbo = new VBO(&mesh->V(0), sizeof(cy::Vec3f) * mesh->NV());
- 	
-	// Links VBO attributes
 	vao->LinkAttribute(*vbo, 0, 3, GL_FLOAT, sizeof(cy::Vec3f), 0);
 	
-	// Unbind all to prevent accidentally modifying them
 	vao->Unbind();
 	vbo->Unbind();
 	
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glfwSwapBuffers(window);
-
-	glEnable(GL_DEPTH_TEST);
-
-	camera = new Camera(width, height, shaderProgram.GetID(), mLeft, mRight, mBot, mTop, mNear, mFar, 80.0f);
+	camera = new Camera(shaderProgram.GetID(), width, height);
 
 	prevTime = glfwGetTime();
 	
 	return true;
 }
-
 
 void ShaderProgram::draw()
 {
@@ -164,23 +127,28 @@ void ShaderProgram::draw()
 	camera->matrix();
 
 	shaderProgram.SetUniformMatrix4("objectMatrix", value_ptr(m));
-	
 	vao->Bind();
 
 	glDrawArrays(GL_POINTS, 0, mesh->NV());
-
 	glfwSwapBuffers(window);
 }
-
 
 void ShaderProgram::closeProgram()
 {
 	glfwDestroyWindow(window);
 }
 
-
 void ShaderProgram::compileShaders()
 {
 	shaderProgram.BuildFiles("shader.vert", "shader.frag");
 	shaderProgram.Link();
+}
+
+void ShaderProgram::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_P && action == GLFW_PRESS) // Change Perspective
+		camera->changePerspective();
+
+	if (key == GLFW_KEY_F6 && action == GLFW_PRESS) // Recompile Shaders
+		compileShaders();
 }

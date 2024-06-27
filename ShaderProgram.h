@@ -1,18 +1,12 @@
 #pragma once
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cy/cyGL.h>
 #include <cy/cyTriMesh.h>
-#include <cy/cyMatrix.h>
-#include <cmath>
 #include <glm/mat4x4.hpp> // glm::mat4
-#include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
-#include <glm/ext/matrix_clip_space.hpp> // glm::perspective
-#include <glm/ext/scalar_constants.hpp> // glm::pi
 #include<glm/gtc/type_ptr.hpp>
 
 #include "VBO.h"
@@ -21,14 +15,14 @@
 
 class ShaderProgram
 {
-    int width = 1200;
     int height = 1200;
-
+    int width = 1200;
+    
     VBO* vbo;
     VAO* vao;
 
     Camera* camera;
-
+    
     // Reads shader code from the shader.vert & shader.frag
     const char* readShaderCode(const char* fileName);
 
@@ -46,31 +40,45 @@ class ShaderProgram
     float modelRotation = 0.0f;
     double prevTime;
     
-    // Projection Matrix Vars
-    float mTop =  20.0f;
-    float mBot = -20.0f;
-
-    float mRight = 20.0f;
-    float mLeft = -20.0f;
-    
-    float mFar = 1000.0f;
-    float mNear = 0.1f;
-    
 public:
     GLFWwindow* window;
 
     bool validMesh = false;
-    
-    // Loads a .obj mesh from a file path
+
+    /**
+     * Initializes ShaderProgram, uses filePath to load a .OBJ mesh.
+     * @param filePath File path to .OBJ file.
+     */
     ShaderProgram(char const* filePath);
-    
+
+    /**
+     * Initializes the ShaderProgram. Sets variables needed for OpenGL.
+     * @return If the shaderProgram successfully initialized or not.
+     */
     bool initialize();
-    
+
+    /**
+     * Draws data to the screen.
+     */
     void draw();
 
+    /**
+     * Properly closes the program.
+     */
     void closeProgram();
 
-    void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-
+    /**
+     * Compiles shaders to be used in OpenGL.
+     */
     void compileShaders();
+ 
+    /**
+     * Callback used for when an input is registered by GLFW.
+     * @param window Reference to OpenGL window.
+     * @param key Key code of key pressed.
+     * @param scancode Unique code for key pressed.
+     * @param action Type of input given.
+     * @param mods Modifiers to key inputs. (Shift + KEY , Ctrl + KEY, etc.)
+     */
+    void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 };

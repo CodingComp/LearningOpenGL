@@ -1,17 +1,13 @@
 #include "Camera.h"
-
 #include <iostream>
 
-
-Camera::Camera(int width, int height, GLuint shaderID, float left, float right, float bottom, float top, float near, float far, float fov) :
-    width(width), height(height), shaderID(shaderID), _left(left), _right(right), _bottom(bottom), _top(top), _near(near), _far(far), fov(fov)
+Camera::Camera(GLuint shaderID, int width, int height) : shaderID(shaderID), width(width), height(height)
 {
     view = glm::mat4(1.0f);
     projection = glm::mat4(1.0f);
 
     matrixLoc = glGetUniformLocation(shaderID, "cameraMatrix");
 }
-
 
 void Camera::matrix()
 {
@@ -20,19 +16,17 @@ void Camera::matrix()
 
     // Projection
     projection = orthographicPerspective ?
-        glm::ortho(_left, _right, _bottom, _top, _near, _far) :
-        glm::perspective(glm::radians(fov), (float)(width / height), _near, _far);
+        glm::ortho(mLeft, mRight, mBottom, mTop, mNear, mFar) :
+        glm::perspective(glm::radians(fov), (float)(width / height), mNear, mFar);
     
     // Sets cameraMatrix in Vertex Shader
     glUniformMatrix4fv(matrixLoc, 1, GL_FALSE, value_ptr(projection * view));
 }
 
-
 void Camera::changePerspective()
 {
     orthographicPerspective = !orthographicPerspective;
 }
-
 
 void Camera::inputs(GLFWwindow* window)
 {
@@ -78,10 +72,10 @@ void Camera::inputs(GLFWwindow* window)
             rotX = sensitivity * (float)(mouseY - (height/2)) / height;
             rotY = sensitivity * (float)(mouseX - (width/2)) / width;
             
-            glm::vec3 newOrientation = glm::rotate(orientation, glm::radians(-rotX), glm::normalize(glm::cross(orientation, up)));
+            glm::vec3 newOrientation = rotate(orientation, glm::radians(-rotX), normalize(cross(orientation, up)));
         
             // Clamps vertical camera to 90 deg
-            if (abs(glm::angle(newOrientation, up) - glm::radians(90.0f)) <= glm::radians(85.0f))
+            if (abs(angle(newOrientation, up) - glm::radians(90.0f)) <= glm::radians(85.0f))
             {
                 orientation = newOrientation;
             }
@@ -92,25 +86,9 @@ void Camera::inputs(GLFWwindow* window)
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
             glfwSetCursorPos(window, width/2, height/2);   
         }
-
-        /*
-         *  Left & Right Mouse Button
-         */
         
-        // Left Mouse Button (Adjust Camera Distance Horizontal)
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-        {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-            lockCursor = true;
-            
-            glfwGetCursorPos(window, &mouseX, &mouseY);
-            
-            rotY = sensitivity * (float)(mouseX - (width/2)) / width;
-            position += rotY * glm::normalize(glm::cross(orientation, up));
-        }
-        
-        // Right Mouse Button (Adjust Camera Distance Vertical)
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        // Left or Right Mouse Button (Adjust Camera Distance Z Axis)
+        if (mousePressed)
         {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
             lockCursor = true;

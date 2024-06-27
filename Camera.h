@@ -16,10 +16,11 @@ class Camera
     bool mousePressed = false;
     bool lockCursor = true;
     
-    float _left, _right, _bottom, _top, _near, _far, fov;
     float speed = 0.1f;
     float sensitivity = 100.0f;
 
+    int width, height;
+    
     GLuint shaderID;
     
     GLint matrixLoc;
@@ -31,15 +32,41 @@ class Camera
     glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
     
 public:
-
-    int width, height;
     
-    Camera(int width, int height, GLuint shaderID, float left, float right, float bottom, float top, float near, float far, float fov);
+    // Projection Matrix Vars
+    float mTop =  20.0f;
+    float mBottom = -20.0f;
 
+    float mRight = 20.0f;
+    float mLeft = -20.0f;
+    
+    float mFar = 1000.0f;
+    float mNear = 0.1f;
+
+    float fov = 80.0f;
+
+    /**
+     * 
+     * @param shaderID ID used for 
+     * @param width 
+     * @param height 
+     */
+    Camera(GLuint shaderID, int width, int height);
+
+    /**
+     * Calculates the cameraMatrix to be used in the vertex shader.
+     */
     void matrix();
-    
+
+    /**
+     * Toggles perspective state. Toggling to either perspective or orthographic projection.
+     */
     void changePerspective();
 
+    /**
+     * Handles inputs that the camera uses. Such as moving camera position & camera viewing angles.
+     * @param window OpenGL window pointer.
+     */
     void inputs(GLFWwindow* window);
     
 };

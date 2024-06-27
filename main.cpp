@@ -8,7 +8,9 @@
 
 ShaderProgram* shaderProgram;
 
-// Main loop of the program, used for anything that needs to be called each frame.
+/**
+ * Main loop of the program, used for anything that needs to be called each frame.
+ */
 void mainLoop()
 {
 	while (!glfwWindowShouldClose(shaderProgram->window)) 
@@ -18,7 +20,6 @@ void mainLoop()
 		glfwPollEvents();
 	}
 }
-
 
 int main(int argc, char* argv[]) 
 {
