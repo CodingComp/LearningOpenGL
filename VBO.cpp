@@ -2,22 +2,22 @@
 
 VBO::VBO(cy::Vec3<GLfloat>* data, GLsizeiptr size)
 {
-    glGenBuffers(1, &ID);
-    glBindBuffer(GL_ARRAY_BUFFER, ID);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+	glGenBuffers(1, &ID);
+	glBindBuffer(GL_ARRAY_BUFFER, ID);
+	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 }
 
 void VBO::Bind()
 {
-    glBindBuffer(GL_ARRAY_BUFFER, ID);
+	glBindBuffer(GL_ARRAY_BUFFER, ID);
 }
 
 void VBO::Unbind()
 {
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void VBO::Delete()
 {
-    glDeleteBuffers(1, &ID);
+	glDeleteBuffers(1, &ID);
 }

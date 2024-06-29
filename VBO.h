@@ -6,29 +6,29 @@
 class VBO
 {
 public:
-    // ID reference for the Vertex Buffer Object
-    GLuint ID;
-    
-    /**
-     *  Creates a buffer for new object in the scene.
-     * 
-     * @param data Buffer data containing information such as, vertex position, color, etc.
-     * @param size Total size (in bytes) of buffer.
-     */
-    VBO(cy::Vec3<GLfloat>* data, GLsizeiptr size);
+	// ID reference for the Vertex Buffer Object
+	GLuint ID;
 
-    /**
-     * Binds Buffer
-     */
-    void Bind();
+	/**
+	 *  Creates a buffer for new object in the scene.
+	 * 
+	 * @param data Buffer data containing information such as, vertex position, color, etc.
+	 * @param size Total size (in bytes) of buffer.
+	 */
+	VBO(cy::Vec3<GLfloat>* data, GLsizeiptr size);
 
-    /**
-     * Unbinds Buffer
-     */
-    void Unbind();
+	/**
+	 * Binds Buffer
+	 */
+	void Bind();
 
-    /**
-     * Deletes Buffer
-     */
-    void Delete();
+	/**
+	 * Unbinds Buffer
+	 */
+	void Unbind();
+
+	/**
+	 * Deletes Buffer
+	 */
+	void Delete();
 };
