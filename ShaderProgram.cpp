@@ -63,6 +63,9 @@ bool ShaderProgram::initialize()
 
 	CY_GL_REGISTER_DEBUG_CALLBACK
 
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	
 	/*
 	 *	Shaders
 	 */
@@ -72,7 +75,7 @@ bool ShaderProgram::initialize()
 	camera = new Camera(shaderProgram.GetID(), width, height);
 
 	prevTime = glfwGetTime();
-
+	
 	return true;
 }
 
@@ -89,12 +92,13 @@ void ShaderProgram::draw()
 	for(int i = 0; i < models.size(); i++) {
 		shaderProgram.SetUniformMatrix4("objectMatrix", value_ptr(models[i]->m));
 		models[i]->vao->Bind();
-
-		glDrawArrays(GL_POINTS, 0, models[i]->mesh->NV());
+		
+		glDrawElements(GL_TRIANGLES, models[i]->mesh->NF() * 3, GL_UNSIGNED_INT, 0);
 	}
 
 	glfwSwapBuffers(window);
 }
+
 
 void ShaderProgram::addModel(const char* filepath)
 {
@@ -117,6 +121,9 @@ void ShaderProgram::addModel(const char* filepath)
 	case 2: // Table
 		models[1]->move(glm::vec3(0.0f, -37.5f, -28.25f));
 		models[1]->rotate(glm::vec3(0.0f, 0.0f, 0.0f));
+		break;
+	case 3: // Cube
+		models[2]->move(glm::vec3(0.0f, -2.0f, -5.0f));
 		break;
 	}
 }

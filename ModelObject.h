@@ -11,6 +11,7 @@
 
 #include "VAO.h"
 #include "VBO.h"
+#include "EBO.h"
 
 class ModelObject
 {
@@ -20,12 +21,12 @@ class ModelObject
 	glm::mat4 m_Scale = glm::mat4(1.0f);
 
 	const char* filepath;
-
+	
 	void updateMatrix();
 
 public:
 	cy::TriMesh* mesh;
-
+	
 	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -34,6 +35,7 @@ public:
 
 	VAO* vao;
 	VBO* vbo;
+	EBO* ebo;
 
 	/**
 	 * 

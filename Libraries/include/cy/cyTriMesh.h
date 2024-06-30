@@ -207,7 +207,7 @@ private:
 inline void TriMesh::operator = ( TriMesh const &t )
 {
 	Copy( t.v,  t.nv,  v,  nv  );
-	Copy( t.f,  t.nf,  f,  nf  );
+	Copy( t.f,  t.nf,   f,  nf  );
 	Copy( t.vn, t.nvn, vn, nvn );
 	Copy( t.fn, t.nf,  fn );
 	Copy( t.vt, t.nvt, vt, nvt );
