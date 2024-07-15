@@ -6,14 +6,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cy/cyGL.h>
-#include <cy/cyTriMesh.h>
-#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/mat4x4.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
 #include "VBO.h"
 #include "VAO.h"
 #include "Camera.h"
-#include "ModelObject.h"
+#include "Model.h"
 
 class ShaderProgram
 {
@@ -29,7 +28,6 @@ class ShaderProgram
 	const char* readShaderCode(const char* fileName);
 
 	cy::GLSLProgram shaderProgram;
-	cy::TriMesh* mesh;
 
 	// Vertex Shader Matrix
 	glm::mat4 m;
@@ -43,8 +41,8 @@ class ShaderProgram
 	double prevTime;
 
 	// List of models to be drawn
-	std::vector<ModelObject*> models;
-
+	std::vector<Model*> models;
+	
 public:
 	GLFWwindow* window;
 

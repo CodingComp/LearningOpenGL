@@ -2,7 +2,7 @@
 
 ShaderProgram::ShaderProgram()
 {
-
+	
 }
 
 const char* ShaderProgram::readShaderCode(const char* fileName)
@@ -91,9 +91,7 @@ void ShaderProgram::draw()
 	// Loops over each model and draws it
 	for(int i = 0; i < models.size(); i++) {
 		shaderProgram.SetUniformMatrix4("objectMatrix", value_ptr(models[i]->m));
-		models[i]->vao->Bind();
-		
-		glDrawElements(GL_TRIANGLES, models[i]->mesh->NF() * 3, GL_UNSIGNED_INT, 0);
+		models[i]->Draw();
 	}
 
 	glfwSwapBuffers(window);
@@ -102,10 +100,10 @@ void ShaderProgram::draw()
 
 void ShaderProgram::addModel(const char* filepath)
 {
-	auto newModel = new ModelObject(filepath);
+	auto newModel = new Model();
 
 	// Tries to load mesh from filepath. If invalid file model is not added to models list.
-	if(!newModel->initialize()) {
+	if(!newModel->loadModel(filepath)) {
 		delete newModel;
 		return;
 	}

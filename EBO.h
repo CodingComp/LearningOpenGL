@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cy/cyVector.h>
 #include <glad/glad.h>
-#include <cy/cyTriMesh.h>
 
 class EBO
 {
@@ -16,8 +14,8 @@ public:
 	 * @param indices Element buffer indices data.
 	 * @param size Total size (in bytes) of element buffer.
 	 */
-	EBO(cy::TriMesh::TriFace* indices, GLsizeiptr size);
-
+	EBO(unsigned int* indices, GLsizeiptr size);
+	
 	/**
 	 * Binds Elements Buffer
 	 */
